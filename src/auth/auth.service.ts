@@ -3,7 +3,7 @@ import {CreateUserDTO, UsersService} from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import {UserPublicDTO} from "../types/UserPublicDTO";
-import {IsString} from "class-validator";
+import {IsDefined, IsString} from "class-validator";
 import {Response} from "express";
 
 export class UserRegistrationDTO{
@@ -11,7 +11,7 @@ export class UserRegistrationDTO{
     username: string
     @IsString()
     password: string
-    email: string | undefined
+    email?: string
 }
 @Injectable()
 export class AuthService {

@@ -1,10 +1,10 @@
 import {Request} from "express";
 
 export class UserPublicDTO {
-    id: number
+    _id: number
     username: string
-    email: string | undefined
+    email?: string
     blocked: boolean
-    localisation: string | undefined
-    date_registered: string
+    localisation?: string
+    date_registered: Date
 }

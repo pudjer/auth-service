@@ -4,36 +4,36 @@ import {UserPublicDTO} from "../types/UserPublicDTO";
 
 export class UserDTO extends UserPublicDTO{
     hashedPassword: string
-    valid_since: string
+    valid_since: Date
 }
 export class CreateUserDTO{
     username: string
     hashedPassword: string
-    email: string | undefined
+    email?: string
 }
 ///TODO implement db
 @Injectable()
 export class UsersService {
     users: UserDTO[] = [
         {
-            id: 1,
+            _id: 1,
             username: 'debil',
             email: 'debil@mail.ru',
             blocked: false,
             localisation: null,
-            date_registered: 'qwer',
+            date_registered: new Date(),
             hashedPassword: 'qwerqwe',
-            valid_since: 'qrwer'
+            valid_since: new Date()
         },
         {
-            id: 2,
+            _id: 2,
             username: 'idiot',
             email: 'idiot@mail.ru',
             blocked: false,
             localisation: 'russia',
-            date_registered: 'rqwr',
+            date_registered: new Date(),
             hashedPassword: 'qwrr',
-            valid_since: 'rqwe'
+            valid_since: new Date()
         },
     ];
 
@@ -43,10 +43,10 @@ export class UsersService {
 
     async create(user: CreateUserDTO){
         const toUsers: UserDTO = {
-            id: this.users.at(-1).id + 1,
+            _id: this.users.at(-1)._id + 1,
             blocked: false,
-            date_registered: (new Date()).toDateString(),
-            valid_since: (new Date()).toDateString(),
+            date_registered: new Date(),
+            valid_since: new Date(),
             email: undefined,
             localisation: undefined,
             ...user}
