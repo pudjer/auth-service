@@ -1,24 +1,22 @@
 import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';
-import {HttpException, Injectable, UnauthorizedException} from '@nestjs/common';
+import {BadRequestException, HttpException, Injectable, UnauthorizedException} from '@nestjs/common';
 import { AuthService } from '../auth.service';
-import {UserPublicDTO} from "../../types/UserPublicDTO";
+import {UserSelfDTO} from "../../models/User";
 import {Request} from "express";
 import {JwtService} from "@nestjs/jwt";
-import {UsersService} from "../../users/users.service";
-let a = 0
+import {UserService} from "../../users/users.service";
+
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-    constructor(private authService: AuthService) {
-        super();
+    constructor(private userService: UserService) {
+        super({global: true});
     }
 
-    async authenticate(req: Request<{ username: string, password: string }>) {
-        const user = await this.authService.validate(req.body);
-        if (!user) {
-            this.fail(401)
-        }
-        this.success(user)
+
+    async validate(username: string, password: string): Promise<any> {
+        const user = await this.userService.validateAndGetUser({username, password});
+        return user
     }
 
 }

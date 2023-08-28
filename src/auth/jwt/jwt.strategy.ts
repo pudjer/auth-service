@@ -1,31 +1,37 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import {Injectable, UnauthorizedException} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, UnauthorizedException} from '@nestjs/common';
 import {ConfigService} from "@nestjs/config";
-import {UserPublicDTO} from "../../types/UserPublicDTO";
+import {UserSelfDTO} from "../../models/User";
 import {Request} from "express";
 import {JwtService} from "@nestjs/jwt";
+import { UserService } from '../../users/users.service';
 
-
+export const TOKEN_NAME = 'refresh_token'
 const cookieExtractor = (req: Request) =>{
     if('cookies' in req){
-        return req.cookies['jwt']
+        return req.cookies[TOKEN_NAME]
     }
 }
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor(configService: ConfigService, private readonly jwtService: JwtService) {
+    constructor(
+        configService: ConfigService,
+        private readonly userService: UserService) {
         super({
             jwtFromRequest: cookieExtractor,
             ignoreExpiration: true,
             secretOrKey: configService.get('SECRET_KEY'),
+            global: true,
         });
     }
 
-    async validate(cookie: UserPublicDTO & {iat: number, exp: number}) {
-        const currentTime = Math.round((new Date()).getTime()/1000)
-        if(cookie.exp + 60*60*24*30 < currentTime){throw new UnauthorizedException()}
-        const {iat, exp, ...user} = cookie
+    async validate(cookie: UserSelfDTO & {iat: number, exp: number}) {
+        const {iat, exp, ...userFromCookie} = cookie
+        const user = await this.userService.validateAndGetUser({username: userFromCookie.username}, {password: false})
+        if(user.valid_since && (Math.floor(user.valid_since.getTime() / 1000) >= iat)){
+            throw new HttpException('Suspicious request detected.', HttpStatus.BAD_REQUEST);
+        }
         return user;
     }
 }

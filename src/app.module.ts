@@ -1,6 +1,5 @@
 import {MiddlewareConsumer, Module, ValidationPipe} from '@nestjs/common';
 import {ConfigModule, ConfigService} from "@nestjs/config";
-import DockerConfLoad from "./config/DockerConfLoad";
 import {AuthModule} from './auth/auth.module';
 import {UsersModule} from "./users/users.module";
 import {getMongoConfig} from "./config/mongo.config";
@@ -8,12 +7,18 @@ import * as cookieParser from "cookie-parser";
 import {APP_PIPE} from "@nestjs/core";
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { MongooseModule } from '@nestjs/mongoose';
+import * as Joi from 'joi';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [DockerConfLoad],
       isGlobal: true,
       cache: true,
+      validationSchema: Joi.object({
+        NODE_ENV: Joi.string()
+          .valid('development', 'production', 'test', 'provision')
+          .default('development'),
+        PORT: Joi.number().default(3000),
+      }),
     }),
     DevtoolsModule.register({
       http: process.env.NODE_ENV !== 'production',
@@ -24,7 +29,6 @@ import { MongooseModule } from '@nestjs/mongoose';
       useFactory: getMongoConfig
     }),
     AuthModule,
-    UsersModule,
   ],
   providers: [{
     provide: APP_PIPE,

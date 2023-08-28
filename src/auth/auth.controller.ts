@@ -1,28 +1,41 @@
-import { Body, Controller, Post, Response, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Response, UseGuards } from '@nestjs/common';
 import { LocalAuthGuard } from './local/local-auth.guard';
-import { AuthService, UserRegistrationDTO } from './auth.service';
+import { AuthService } from './auth.service';
 import { Response as ExpressResponse } from 'express';
-import { User } from '../decorators/UserDecorator';
-import { UserPublicDTO } from '../types/UserPublicDTO';
+import { UserParamDecorator } from '../decorators/UserDecorator';
+import { UserCreateDTO, UserLoginDTO, UserModel, UserSelfDTO } from '../models/User';
+import { AccessToken, Tokens } from '../models/Tokens';
+import { TOKEN_NAME } from './jwt/jwt.strategy';
+import { User } from '../models/User';
+import { JwtAuthGuard } from './jwt/jwt-auth.guard';
+import { ApiBody, ApiCookieAuth, ApiResponse } from '@nestjs/swagger';
 
-///TODO add validations
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @UseGuards(LocalAuthGuard)
+  @ApiResponse({type: AccessToken})
   @Post('login')
-  async login(@User() user: UserPublicDTO, @Response() res: ExpressResponse) {
-    const modifiedRes: ExpressResponse = await this.authService.addCredentials(
-      res,
-      user,
-    );
-    modifiedRes.status(200);
-    modifiedRes.send();
+  @ApiBody({ type: UserLoginDTO })
+  async login(@UserParamDecorator() user: UserModel, @Response({passthrough: true}) res: ExpressResponse){
+    const tokens: Tokens = await this.authService.getTokens(user);
+    res.cookie(TOKEN_NAME, tokens.refresh_token, {httpOnly: true})
+    return {access_token: tokens.access_token}
+  }
+  
+  @ApiCookieAuth('refresh_token')
+  @ApiResponse({ type: AccessToken })
+  @UseGuards(JwtAuthGuard)
+  @Get('refresh')
+  async refresh(@UserParamDecorator() user: UserModel, @Response({ passthrough: true }) res: ExpressResponse){
+    return this.login(user, res)
   }
 
+  @ApiResponse({type: UserSelfDTO})
   @Post('register')
-  async register(@Body() user: UserRegistrationDTO) {
+  async register(@Body() user: UserCreateDTO) {
     return await this.authService.register(user);
   }
+
 }
