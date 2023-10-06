@@ -18,23 +18,29 @@ export class AuthController {
   @ApiResponse({type: AccessToken})
   @Post('login')
   @ApiBody({ type: UserLoginDTO })
-  async login(@UserParamDecorator() user: UserModel, @Response({passthrough: true}) res: ExpressResponse){
-    const tokens: Tokens = await this.authService.getTokens(user);
-    res.cookie(TOKEN_NAME, tokens.refresh_token, {httpOnly: true})
-    return {access_token: tokens.access_token}
+  async login(
+    @UserParamDecorator() user: UserModel,
+    @Response({passthrough: true}) res: ExpressResponse
+    ){
+    const { refresh_token, access_token } = await this.authService.getTokens(user);
+    res.cookie(TOKEN_NAME, refresh_token, {httpOnly: true})
+    return {access_token: access_token}
   }
-  
+
   @ApiCookieAuth('refresh_token')
   @ApiResponse({ type: AccessToken })
   @UseGuards(JwtAuthGuard)
   @Get('refresh')
-  async refresh(@UserParamDecorator() user: UserModel, @Response({ passthrough: true }) res: ExpressResponse){
+  async refresh(
+    @UserParamDecorator() user: UserModel,
+    @Response({ passthrough: true }) res: ExpressResponse
+    ){
     return this.login(user, res)
   }
 
   @ApiResponse({type: UserSelfDTO})
   @Post('register')
-  async register(@Body() user: UserCreateDTO) {
+  async register(@Body() user: UserCreateDTO): Promise<UserSelfDTO> {
     return await this.authService.register(user);
   }
 

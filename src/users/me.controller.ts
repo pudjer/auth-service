@@ -4,7 +4,7 @@ import {UserParamDecorator} from "../decorators/UserDecorator";
 import {UserService} from "./users.service";
 import { UserModel } from '../models/User';
 import { UserSelfDTO } from '../models/User';
-import { ApiCookieAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiNoContentResponse, ApiResponse } from '@nestjs/swagger';
 
 @Controller('me')
 export class MeController {
@@ -13,12 +13,13 @@ export class MeController {
     @ApiCookieAuth('refresh_token')
     @ApiResponse({type: UserSelfDTO})
     @UseGuards(JwtAuthGuard)
-    @Get('profile')
+    @Get()
     async getProfile(@UserParamDecorator() user: UserModel) {
-        const { hashedPassword, ...res } = (await this.usersService.findByUsername(user.username)).toObject()
-        return res
+            
+        return await this.usersService.validateAndGetUser(user, { password: false })
     }
 
+    @ApiNoContentResponse()
     @ApiCookieAuth('refresh_token')
     @UseGuards(JwtAuthGuard)
     @Delete()
@@ -26,12 +27,13 @@ export class MeController {
         await user.deleteOne()
     }
 
+    @ApiResponse({ type: UserSelfDTO })
     @ApiCookieAuth('refresh_token')
     @UseGuards(JwtAuthGuard)
     @Patch()
     async invalidateByTime(@UserParamDecorator() user: UserModel) {
         user.valid_since = new Date()
-        await user.save()
+        return await user.save()
     }
     
 

@@ -10,11 +10,16 @@ import { Tokens } from '../models/Tokens';
 
 @Injectable()
 export class AuthService {
+    refreshExpTime: string
+    accessExpTime: string
     constructor(
         private usersService: UserService,
         private jwtService: JwtService,
         private readonly configService: ConfigService
-    ) {}
+    ) {
+        this.refreshExpTime = this.configService.get('JWT_REFRESH_EXPIRATION_TIME')
+        this.accessExpTime = this.configService.get('JWT_ACCESS_EXPIRATION_TIME')
+    }
 
     
     async register(user: UserCreateDTO){
@@ -24,14 +29,15 @@ export class AuthService {
             ...userNoPassw,
             hashedPassword,
         };
+
         return await this.usersService.create(toCreate)
     }
     async getTokens(user: User): Promise<Tokens> {
         const userf = (await this.usersService.findByUsername(user.username)).toObject()
         const {hashedPassword, valid_since , ...toCookie} = userf
         return {
-            refresh_token: this.jwtService.sign(toCookie, { expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION_TIME')}),
-            access_token: this.jwtService.sign(toCookie, { expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION_TIME') })
+            refresh_token: this.jwtService.sign(toCookie, { expiresIn: this.refreshExpTime}),
+            access_token: this.jwtService.sign(toCookie, { expiresIn: this.accessExpTime })
         }
     }
 

@@ -1,13 +1,14 @@
 import { Prop, SchemaFactory } from "@nestjs/mongoose";
 import { ApiProperty, ApiPropertyOptional, IntersectionType, OmitType, PickType } from "@nestjs/swagger";
-import { IsBoolean, IsEmail, IsISO8601, IsNumber, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from "class-validator";
+import { IsBoolean, IsEmail, IsISO8601, IsNumber, IsOptional, IsString, IsStrongPassword, Matches, Max, MaxLength, MinLength, ValidateNested } from "class-validator";
 import { Schema } from "@nestjs/mongoose";
 import { Location } from "./Location";
 import { Type } from "class-transformer";
 import { HydratedDocument } from "mongoose";
+import { privateAttributes } from "../config/variables";
 
 
-
+const [password, ...privateAttributesWithoutPassword] = privateAttributes
 
 @Schema({ versionKey: false })
 export class User{
@@ -16,10 +17,11 @@ export class User{
     @ApiProperty({type: String, maxLength: 25})
     @Prop({ type: () => String, required: true, unique: true})
     @IsString()
+    @Matches(/^[A-Za-z0-9]*$/)
     username: string
 
     @ApiPropertyOptional({ type: String })
-    @Prop({ type: () => String, unique: true })
+    @Prop({ type: () => String, unique: true, required: false, sparse: true})
     @IsEmail()
     @IsOptional()
     email?: string
@@ -33,10 +35,11 @@ export class User{
     blocked: boolean
 
     @ApiPropertyOptional({ type: Location })
-    @Prop({ type: 'ObjectId', ref: Location.name })
+    @Prop({ type: 'ObjectId', ref: Location.name, sparse: true })
     @ValidateNested()
+    @IsOptional()
     @Type(() => Location)
-    localisation?: string
+    localisation?: Location
 
     @ApiProperty({type: Date})
     @Prop({ type: () => Date, default: () => new Date() })
@@ -50,29 +53,30 @@ export class User{
     
     @ApiProperty({ type: Date })
     @IsISO8601()
-    @Prop({ type: () => Date, default: () => new Date() })
+    @Prop({ type: () => Date, default: () => new Date(0) })
     valid_since: Date
 }
 
 export class UserSelfDTO extends OmitType(
     User,
-    ['hashedPassword'] as const
+    [...privateAttributesWithoutPassword] as const
     ) {}
+
 
 export class UserPublicDTO extends OmitType(
     UserSelfDTO,
-    ['blocked', 'localisation', 'valid_since'] as const
+    ['localisation'] as const
     ) {}
 
 export class UserCreateDTO extends PickType(
     UserSelfDTO,
     ['username','email','localisation'] as const
     ) {
-    
-    @MaxLength(60)
-    @MinLength(8)
-    @ApiProperty({ type: String, maxLength: 60, minLength: 8 })
+
+    @IsStrongPassword()
+    @ApiProperty({ type: String})
     @IsString()
+    @MaxLength(200)
     password: string
 
 }

@@ -28,8 +28,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     async validate(cookie: UserSelfDTO & {iat: number, exp: number}) {
         const {iat, exp, ...userFromCookie} = cookie
-        const user = await this.userService.validateAndGetUser({username: userFromCookie.username}, {password: false})
-        if(user.valid_since && (Math.floor(user.valid_since.getTime() / 1000) >= iat)){
+        const user = await this.userService.validateAndGetUser(userFromCookie, {password: false})
+        const valid_since = Math.floor(user.valid_since.getTime() / 1000)
+        if(user.valid_since && (valid_since > iat)){
             throw new HttpException('Suspicious request detected.', HttpStatus.BAD_REQUEST);
         }
         return user;

@@ -8,7 +8,7 @@ import { UnauthorizedException } from '@nestjs/common';
 
 
 @Injectable()
-export class UserService implements IUserService {
+export class UserService {
     constructor(
         @InjectModel(User.name) private userModel: Model<User>
     ) {}
@@ -24,11 +24,11 @@ export class UserService implements IUserService {
         return res;
     }
     
-    
-    async validateAndGetUser(toValidate, options = { password: true }): Promise<UserModel> {
+    validateAndGetUser<T, J>(cred: T, options?: {password: J}): T extends Credentials ? Promise<UserModel> : T extends { username: string } ? J extends false ? Promise<UserModel> : never : never
+    async validateAndGetUser(toValidate: {username: string, password?: string}, options?: {password: boolean}){
         const user = await this.findByUsername(toValidate.username);
         if(!user) throw new UnauthorizedException()
-        if(options.password){
+        if(options?.password){
             if (!await bcrypt.compare(toValidate.password, user.hashedPassword)) {
                throw new UnauthorizedException() 
             } 
@@ -43,8 +43,3 @@ export class UserService implements IUserService {
     
 }
 type Credentials = { password: string, username: string } 
-type validateAndGetUserType = (cred: Credentials, options: { password: true }) => Promise<UserModel>
-type validateAndGetUserType2 = (cred: {username: string}, options?: { password: false }) => Promise<UserModel>
-interface IUserService{
-    validateAndGetUser: validateAndGetUserType | validateAndGetUserType2
-}

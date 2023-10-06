@@ -1,0 +1,1 @@
+export const privateAttributes = ['password', 'hashedPassword', 'blocked', 'valid_since'] as const
