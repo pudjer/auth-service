@@ -6,9 +6,9 @@ import { UserCreateDTO, UserLoginDTO } from '../src/models/User';
 import { bruteforceFunction } from '../src/helpers/bruteforce';
 
 
-const goodPasswords = ['disshitisrealystrong69@FKJDS']
-const badPasswords = ['qwerty123', 'aslkdfj']
-const goodUserNames = ['dolboyob69']
+const goodPasswords = ['disshitisrealystrong69@FKJDS', '4w90tuw0it4ERthj4%%']
+const badPasswords = ['qwerty123', 'aslkdfj','00000000']
+const goodUserNames = ['dolboyob69', 'synshluhiii']
 const badUserNames = ['adfjls;kjadslfk;jasdlkfjals;jf;askfja;sdjf', '&$*'] 
 
 describe('AppController (e2e)', () => {
@@ -32,19 +32,16 @@ describe('AppController (e2e)', () => {
   });
 
   afterAll(async () => {
-    bruteforceFunction(async (username, password) => {
-      const agent = agentHook(username + password)
-      const result = await agent
-        .delete('/me').send()
-      expect(result.statusCode).toBe(200)
-    })(goodUserNames, goodPasswords)
+    await app.close()
   })
 
 
 
 
+
   
-  bruteforceFunction((username, password )=>{
+  bruteforceFunction(async (username, password )=>{
+
     it(`/auth/register/ (POST): success username: ${username}, password: ${password}`, async () => {
       const agent = agentHook(username+password)
       const request: UserCreateDTO = {
@@ -60,9 +57,6 @@ describe('AppController (e2e)', () => {
       expect(usernameres).toBe(username)
     });
 
-
-
-
     it(`/auth/login/ (POST): success username: ${username}, password: ${password}`, async () => {
       const agent = agentHook(username + password)
       const request: UserLoginDTO = {
@@ -77,12 +71,14 @@ describe('AppController (e2e)', () => {
       expect(typeof access_token).toBe('string')
     });
 
-
+    it(`/me (DELETE): success username: ${username}, password: ${password}`, async () => {
+      const agent = agentHook(username + password)
+      const result = await agent
+        .delete('/me').send()
+      expect(result.statusCode).toBe(200)
+    });
   })(goodUserNames, goodPasswords)
     
-
-
-
   bruteforceFunction((username, password) => {
     it(`/auth/register/ (POST): fail(username) username: ${username}, password: ${password}`, async () => {
       const agent = agentHook(username + password)
@@ -108,6 +104,4 @@ describe('AppController (e2e)', () => {
       expect(result_1.status).toBe(400)
     });
   })(goodUserNames, badPasswords)
-
-  
 });

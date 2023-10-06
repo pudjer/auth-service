@@ -41,6 +41,7 @@ export class AuthController {
   @ApiResponse({type: UserSelfDTO})
   @Post('register')
   async register(@Body() user: UserCreateDTO): Promise<UserSelfDTO> {
+    
     return await this.authService.register(user);
   }
 

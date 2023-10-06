@@ -36,9 +36,14 @@ const pullres = (indexes: number[], values: any[][]) => {
     return res
 }
 
-export const bruteforceFunction = (foo: (...args: any[])=>void ) => (...arrofarr: any[][]) => {
+export const bruteforceFunction = (foo: (...args: any[])=>any ) => (...arrofarr: any[][]) => {
     const toexec = bruteforce(...arrofarr)
+    const res = []
     for(const i of toexec){
-        foo(...i)
+        const foores = foo(...i)
+        if(foores instanceof Promise){
+            res.push(foores)
+        }
     }
+    return Promise.all(res)
 }
