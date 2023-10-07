@@ -9,10 +9,14 @@ import { TOKEN_NAME } from './jwt/jwt.strategy';
 import { User } from '../models/User';
 import { JwtAuthGuard } from './jwt/jwt-auth.guard';
 import { ApiBody, ApiCookieAuth, ApiResponse } from '@nestjs/swagger';
+import { EmailService } from '../email/email.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private emailService: EmailService
+    ) {}
 
   @UseGuards(LocalAuthGuard)
   @ApiResponse({type: AccessToken})
@@ -45,4 +49,15 @@ export class AuthController {
     return await this.authService.register(user);
   }
 
+
+  @Post('email')
+  async email(){
+    return this.emailService.send({
+      from: 'tirettur@mail.ru',
+      to: 'degil59750@finghy.com',
+      subject: 'Hello from AWS SES',
+      text: 'This is a test email sent from AWS SES SMTP in Node.js.',
+    })
+  }
 }
+
