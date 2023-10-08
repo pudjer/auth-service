@@ -10,6 +10,8 @@ import { AuthController } from './auth.controller';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EmailCheckHandler } from './auth.emailchecker';
 import { EmailService } from '../email/email.service';
+import { EmailModule } from '../email/email.module';
+import { messagePattern } from '../config/variables';
 
 @Module({
   imports: [
@@ -18,14 +20,29 @@ import { EmailService } from '../email/email.service';
     JwtModule.registerAsync({
       useFactory: async (configService: ConfigService)=>({
         secret: await configService.get('SECRET_KEY'),
-        signOptions: { expiresIn: '60s' },
         global: true,
       }),
       inject: [ConfigService],
     }),
-    CqrsModule,
+    EmailModule.registerAsync({
+      useFactory: async (configService: ConfigService) => ({
+        port: configService.get('SMTP_PORT'),
+        user: configService.get('SMTP_USER'),
+        password: configService.get('SMTP_PASSWORD'),
+        host: configService.get('SMTP_HOST'),
+        from: 'tirettur@mail.ru'
+      }),
+      inject: [ConfigService]
+    }),
   ],
-  providers: [EmailService, AuthService, LocalStrategy, JwtStrategy, EmailCheckHandler],
+  providers: [AuthService, LocalStrategy, JwtStrategy, EmailCheckHandler,
+  {
+    useValue: (token: string)=>{
+      return messagePattern + ' '+ token
+    },
+    provide: 'EMAIL_FUNC'
+  }
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}

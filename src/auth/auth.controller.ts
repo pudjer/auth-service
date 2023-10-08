@@ -8,14 +8,22 @@ import { AccessToken, Tokens } from '../models/Tokens';
 import { TOKEN_NAME } from './jwt/jwt.strategy';
 import { User } from '../models/User';
 import { JwtAuthGuard } from './jwt/jwt-auth.guard';
-import { ApiBody, ApiCookieAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiCookieAuth, ApiNoContentResponse, ApiProperty, ApiPropertyOptional, ApiResponse, PickType } from '@nestjs/swagger';
 import { EmailService } from '../email/email.service';
+import { Prop } from '@nestjs/mongoose';
+import { IsEmail, IsOptional } from 'class-validator';
+import { AuthRequired } from '../decorators/AuthRequired';
+
+class Email {
+  @ApiProperty({ type: String })
+  @IsEmail()
+  email: string
+}
 
 @Controller('auth')
 export class AuthController {
   constructor(
-    private authService: AuthService,
-    private emailService: EmailService
+    private authService: AuthService
     ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -31,9 +39,8 @@ export class AuthController {
     return {access_token: access_token}
   }
 
-  @ApiCookieAuth('refresh_token')
+  @AuthRequired
   @ApiResponse({ type: AccessToken })
-  @UseGuards(JwtAuthGuard)
   @Get('refresh')
   async refresh(
     @UserParamDecorator() user: UserModel,
@@ -44,20 +51,18 @@ export class AuthController {
 
   @ApiResponse({type: UserSelfDTO})
   @Post('register')
-  async register(@Body() user: UserCreateDTO): Promise<UserSelfDTO> {
-    
+  async register(@Body() user: UserCreateDTO): Promise<UserSelfDTO> {    
     return await this.authService.register(user);
   }
-
-
+  
+  @ApiNoContentResponse()
+  @AuthRequired
   @Post('email')
-  async email(){
-    return this.emailService.send({
-      from: 'tirettur@mail.ru',
-      to: 'degil59750@finghy.com',
-      subject: 'Hello from AWS SES',
-      text: 'This is a test email sent from AWS SES SMTP in Node.js.',
-    })
+  async email(
+    @Body() body: Email,
+    @UserParamDecorator() user: UserModel,
+    ){
+    await this.authService.regEmail(user.username, body.email)
   }
 }
 

@@ -7,20 +7,16 @@ import * as cookieParser from "cookie-parser";
 import {APP_INTERCEPTOR, APP_PIPE} from "@nestjs/core";
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { MongooseModule } from '@nestjs/mongoose';
-import * as Joi from 'joi';
 import { stripInterceptor } from './stripInterceptor';
-import { privateAttributes } from '../config/variables';
+import { privateAttributes, validationSchema } from '../config/variables';
+import { EmailModule } from '../email/email.module';
+import { CqrsModule } from '@nestjs/cqrs';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
-      validationSchema: Joi.object({
-        NODE_ENV: Joi.string()
-          .valid('development', 'production', 'test', 'provision')
-          .default('development'),
-        PORT: Joi.number().default(3000),
-      }),
+      validationSchema: validationSchema
     }),
     DevtoolsModule.register({
       http: process.env.NODE_ENV !== 'production',
@@ -30,6 +26,7 @@ import { privateAttributes } from '../config/variables';
       useFactory: getMongoConfig
     }),
     AuthModule,
+    CqrsModule,
   ],
   providers: [
     {

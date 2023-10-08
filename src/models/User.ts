@@ -5,10 +5,10 @@ import { Schema } from "@nestjs/mongoose";
 import { Location } from "./Location";
 import { Type } from "class-transformer";
 import { HydratedDocument } from "mongoose";
-import { privateAttributes } from "../config/variables";
+import { privateAttributes, privateAttributesWithoutPassword } from "../config/variables";
 
 
-const [password, ...privateAttributesWithoutPassword] = privateAttributes
+
 
 @Schema({ versionKey: false })
 export class User{
@@ -55,6 +55,9 @@ export class User{
     @IsISO8601()
     @Prop({ type: () => Date, default: () => new Date(0) })
     valid_since: Date
+
+    @Prop({ type: () => String, required: false})
+    emailToken?: string
 }
 
 export class UserSelfDTO extends OmitType(

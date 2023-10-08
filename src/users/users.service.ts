@@ -14,7 +14,8 @@ export class UserService {
     ) {}
 
     async findByUsername(username: string){
-        const res = await this.userModel.findOne({ username: username }).exec();
+        const res = await this.userModel.findOne({ username }).exec();
+        if (!res) throw new UnauthorizedException()
         return res
     }
 
@@ -27,7 +28,6 @@ export class UserService {
     validateAndGetUser<T, J>(cred: T, options?: {password: J}): T extends Credentials ? Promise<UserModel> : T extends { username: string } ? J extends false ? Promise<UserModel> : never : never
     async validateAndGetUser(toValidate: {username: string, password?: string}, options?: {password: boolean}){
         const user = await this.findByUsername(toValidate.username);
-        if(!user) throw new UnauthorizedException()
         if(options?.password){
             if (!await bcrypt.compare(toValidate.password, user.hashedPassword)) {
                throw new UnauthorizedException() 
@@ -36,10 +36,19 @@ export class UserService {
         if(user.blocked) throw new ForbiddenException() 
         return user
     }
-    
-    
-    
-    
-    
+
+    async setAttributes(username: string, attributes_values: Map<User>){
+        const user = await this.findByUsername(username)
+        for(const attr in attributes_values){
+            user[attr] = attributes_values[attr]
+        }
+        await user.save()
+    }
+
 }
+
+type Map<T> = {
+    [Property in keyof T]?: T[Property]
+}
+    
 type Credentials = { password: string, username: string } 
