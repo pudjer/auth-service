@@ -2,10 +2,10 @@ import { Prop, SchemaFactory } from "@nestjs/mongoose";
 import { ApiProperty, ApiPropertyOptional, IntersectionType, OmitType, PickType } from "@nestjs/swagger";
 import { IsBoolean, IsEmail, IsISO8601, IsNumber, IsOptional, IsString, IsStrongPassword, Matches, Max, MaxLength, MinLength, ValidateNested } from "class-validator";
 import { Schema } from "@nestjs/mongoose";
-import { Location } from "./Location";
+import { UserLocation } from "./Location";
 import { Type } from "class-transformer";
 import { HydratedDocument } from "mongoose";
-import { privateAttributes, privateAttributesWithoutPassword } from "../config/variables";
+import { privateAttributes, privateAttributesWithoutPassword } from "../../config/variables";
 
 
 
@@ -34,12 +34,12 @@ export class User{
     @Prop({ type: () => Boolean, default: false })
     blocked: boolean
 
-    @ApiPropertyOptional({ type: Location })
-    @Prop({ type: 'ObjectId', ref: Location.name, sparse: true })
+    @ApiPropertyOptional({ type: UserLocation })
+    @Prop({ type: 'ObjectId', ref: UserLocation.name, sparse: true })
     @ValidateNested()
     @IsOptional()
-    @Type(() => Location)
-    localisation?: Location
+    @Type(() => UserLocation)
+    localisation?: UserLocation
 
     @ApiProperty({type: Date})
     @Prop({ type: () => Date, default: () => new Date() })

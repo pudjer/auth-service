@@ -3,9 +3,9 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsString, Matches } from "class-validator";
 import { HydratedDocument } from "mongoose";
 
-export type LocationModel = HydratedDocument<Location>
+export type LocationModel = HydratedDocument<UserLocation>
 @Schema({versionKey: false})
-export class Location{
+export class UserLocation{
     @Matches(/^[A-Za-z0-9]*$/)
     @ApiProperty({type: String})
     @IsString()
@@ -13,4 +13,4 @@ export class Location{
     name: string;
 }
 
-export const LocationSchema = SchemaFactory.createForClass(Location);
+export const LocationSchema = SchemaFactory.createForClass(UserLocation);

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as testRequest from 'supertest';
 import { AppModule } from '../src/app/app.module';
-import { UserCreateDTO, UserLoginDTO } from '../src/models/User';
+import { UserCreateDTO, UserLoginDTO } from '../src/users/models/User';
 import { bruteforceFunction } from '../src/helpers/bruteforce';
 
 
@@ -42,14 +42,14 @@ describe('AppController (e2e)', () => {
   
   bruteforceFunction(async (username, password )=>{
 
-    it(`/auth/register/ (POST): success username: ${username}, password: ${password}`, async () => {
+    it(`/user/ (POST): success username: ${username}, password: ${password}`, async () => {
       const agent = agentHook(username+password)
       const request: UserCreateDTO = {
           username,
           password,
         }
       const result = await agent
-        .post('/auth/register')
+        .post('/user')
         .send(request);
       const { date_registered, username: usernameres } = result.body
       expect(result.statusCode).toEqual(201);
@@ -57,33 +57,33 @@ describe('AppController (e2e)', () => {
       expect(usernameres).toBe(username)
     });
 
-    it(`/auth/login/ (POST): success username: ${username}, password: ${password}`, async () => {
+    it(`/user/login/ (POST): success username: ${username}, password: ${password}`, async () => {
       const agent = agentHook(username + password)
       const request: UserLoginDTO = {
           username,
           password,
         }
       const result = await agent
-        .post('/auth/login')
+        .post('/user/login')
         .send(request)
       const {access_token} = result.body
       expect(result.statusCode).toEqual(201);
       expect(typeof access_token).toBe('string')
     });
 
-    it(`/me (DELETE): success username: ${username}, password: ${password}`, async () => {
+    it(`/user (DELETE): success username: ${username}, password: ${password}`, async () => {
       const agent = agentHook(username + password)
       const result = await agent
-        .delete('/me').send()
+        .delete('/user').send()
       expect(result.statusCode).toBe(200)
     });
   })(goodUserNames, goodPasswords)
     
   bruteforceFunction((username, password) => {
-    it(`/auth/register/ (POST): fail(username) username: ${username}, password: ${password}`, async () => {
+    it(`/user/ (POST): fail(username) username: ${username}, password: ${password}`, async () => {
       const agent = agentHook(username + password)
       const result_1 = await agent
-        .post('/auth/register')
+        .post('/user')
         .send({
           username,
           password
@@ -93,10 +93,10 @@ describe('AppController (e2e)', () => {
   })(badUserNames, goodPasswords)
 
   bruteforceFunction((username, password) => {
-    it(`/auth/register/ (POST): fail(password) username: ${username}, password: ${password}`, async () => {
+    it(`/user/ (POST): fail(password) username: ${username}, password: ${password}`, async () => {
       const agent = agentHook(username + password)
       const result_1 = await agent
-        .post('/auth/register')
+        .post('/user')
         .send({
           username,
           password

@@ -1,7 +1,6 @@
 import {MiddlewareConsumer, Module, ValidationPipe} from '@nestjs/common';
 import {ConfigModule, ConfigService} from "@nestjs/config";
-import {AuthModule} from '../auth/auth.module';
-import {UsersModule} from "../users/users.module";
+import {UserModule} from '../users/users.module';
 import {getMongoConfig} from "../config/mongo.config";
 import * as cookieParser from "cookie-parser";
 import {APP_INTERCEPTOR, APP_PIPE} from "@nestjs/core";
@@ -9,8 +8,8 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { MongooseModule } from '@nestjs/mongoose';
 import { stripInterceptor } from './stripInterceptor';
 import { privateAttributes, validationSchema } from '../config/variables';
-import { EmailModule } from '../email/email.module';
 import { CqrsModule } from '@nestjs/cqrs';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -25,7 +24,7 @@ import { CqrsModule } from '@nestjs/cqrs';
       inject: [ConfigService],
       useFactory: getMongoConfig
     }),
-    AuthModule,
+    UserModule,
     CqrsModule,
   ],
   providers: [

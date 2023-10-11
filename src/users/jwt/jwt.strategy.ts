@@ -2,10 +2,10 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import {HttpException, HttpStatus, Injectable, UnauthorizedException} from '@nestjs/common';
 import {ConfigService} from "@nestjs/config";
-import {UserSelfDTO} from "../../models/User";
+import {UserSelfDTO} from "../models/User";
 import {Request} from "express";
 import {JwtService} from "@nestjs/jwt";
-import { UserService } from '../../users/users.service';
+import { UserService } from '../users.service';
 
 export const TOKEN_NAME = 'refresh_token'
 const cookieExtractor = (req: Request) =>{

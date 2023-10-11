@@ -1,17 +1,38 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import {UserCreateDTO, User, UserHashedDTO, UserPublicDTO, UserSelfDTO, UserLoginDTO, UserModel} from "../models/User";
-import { Document, Model } from 'mongoose';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import {UserCreateDTO, User, UserHashedDTO, UserModel} from "./models/User";
+import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
-import { validate, validateOrReject } from 'class-validator';
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { EmailService } from '../email/email.service';
+import { privateAttributesWithoutPassword } from '../config/variables';
+import { striper } from '../helpers/stripper';
+import { Tokens } from './models/Tokens';
+import * as uuid from 'uuid'
 
+
+type JWTEmailPayload = {
+    username: string,
+    email: string,
+    emailToken: string,
+}
 
 @Injectable()
 export class UserService {
+    refreshExpTime: string
+    accessExpTime: string
     constructor(
-        @InjectModel(User.name) private userModel: Model<User>
-    ) {}
+        @InjectModel(User.name) private userModel: Model<User>,
+        private jwtService: JwtService,
+        private readonly configService: ConfigService,
+        private emailService: EmailService,
+        @Inject('EMAIL_FUNC') private emailFunc: (token: string) => string
+    ) {
+        this.refreshExpTime = this.configService.get('JWT_REFRESH_EXPIRATION_TIME')
+        this.accessExpTime = this.configService.get('JWT_ACCESS_EXPIRATION_TIME')
+    }
 
     async findByUsername(username: string){
         const res = await this.userModel.findOne({ username }).exec();
@@ -43,6 +64,39 @@ export class UserService {
             user[attr] = attributes_values[attr]
         }
         await user.save()
+    }
+    async regEmail(username: string, email: string) {
+        const emailToken = uuid.v4();
+        const payload: JWTEmailPayload = { username, email, emailToken }
+        const jwtToken = this.jwtService.sign(
+            payload,
+            { expiresIn: this.refreshExpTime });
+
+        await this.emailService.send({
+            to: email,
+            subject: 'Email Verification',
+            text: this.emailFunc(jwtToken)
+        })
+        const user = await this.setAttributes(username, { emailToken })
+    }
+
+    async register(user: UserCreateDTO) {
+        const hashedPassword = await bcrypt.hash(user.password, 4)
+        const { password, ...userNoPassw } = user
+        const toCreate: UserHashedDTO = {
+            ...userNoPassw,
+            hashedPassword,
+        };
+
+        return await this.create(toCreate)
+    }
+    async getTokens(user: User): Promise<Tokens> {
+        const userf = (await this.findByUsername(user.username)).toObject()
+        const toCookie = striper(privateAttributesWithoutPassword)(userf)
+        return {
+            refresh_token: this.jwtService.sign(toCookie, { expiresIn: this.refreshExpTime }),
+            access_token: this.jwtService.sign(toCookie, { expiresIn: this.accessExpTime })
+        }
     }
 
 }
