@@ -8,7 +8,6 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { MongooseModule } from '@nestjs/mongoose';
 import { stripInterceptor } from './stripInterceptor';
 import { privateAttributes, validationSchema } from '../config/variables';
-import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import { CqrsModule } from '@nestjs/cqrs';
       useFactory: getMongoConfig
     }),
     UserModule,
-    CqrsModule,
   ],
   providers: [
     {

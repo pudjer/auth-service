@@ -10,11 +10,6 @@ import { IsEmail } from 'class-validator';
 import { AuthRequired } from './decorators/AuthRequired';
 import { UserService } from './users.service';
 
-class Email {
-  @ApiProperty({ type: String })
-  @IsEmail()
-  email: string
-}
 
 @Controller('user')
 export class UserController {
@@ -51,15 +46,6 @@ export class UserController {
     return await this.userService.register(user);
   }
   
-  @ApiNoContentResponse()
-  @AuthRequired
-  @Post('email')
-  async email(
-    @Body() body: Email,
-    @UserParamDecorator() user: UserModel,
-    ){
-    await this.userService.regEmail(user.username, body.email)
-  }
 
   @AuthRequired
   @ApiResponse({ type: UserSelfDTO })
@@ -82,5 +68,7 @@ export class UserController {
     user.valid_since = new Date()
     return await user.save()
   }
+
+  
 }
 

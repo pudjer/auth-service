@@ -6,18 +6,10 @@ import * as bcrypt from 'bcrypt';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { EmailService } from '../email/email.service';
 import { privateAttributesWithoutPassword } from '../config/variables';
 import { striper } from '../helpers/stripper';
 import { Tokens } from './models/Tokens';
-import * as uuid from 'uuid'
 
-
-type JWTEmailPayload = {
-    username: string,
-    email: string,
-    emailToken: string,
-}
 
 @Injectable()
 export class UserService {
@@ -27,7 +19,6 @@ export class UserService {
         @InjectModel(User.name) private userModel: Model<User>,
         private jwtService: JwtService,
         private readonly configService: ConfigService,
-        private emailService: EmailService,
         @Inject('EMAIL_FUNC') private emailFunc: (token: string) => string
     ) {
         this.refreshExpTime = this.configService.get('JWT_REFRESH_EXPIRATION_TIME')
@@ -65,20 +56,7 @@ export class UserService {
         }
         await user.save()
     }
-    async regEmail(username: string, email: string) {
-        const emailToken = uuid.v4();
-        const payload: JWTEmailPayload = { username, email, emailToken }
-        const jwtToken = this.jwtService.sign(
-            payload,
-            { expiresIn: this.refreshExpTime });
 
-        await this.emailService.send({
-            to: email,
-            subject: 'Email Verification',
-            text: this.emailFunc(jwtToken)
-        })
-        const user = await this.setAttributes(username, { emailToken })
-    }
 
     async register(user: UserCreateDTO) {
         const hashedPassword = await bcrypt.hash(user.password, 4)

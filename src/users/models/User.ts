@@ -2,10 +2,8 @@ import { Prop, SchemaFactory } from "@nestjs/mongoose";
 import { ApiProperty, ApiPropertyOptional, IntersectionType, OmitType, PickType } from "@nestjs/swagger";
 import { IsBoolean, IsEmail, IsISO8601, IsNumber, IsOptional, IsString, IsStrongPassword, Matches, Max, MaxLength, MinLength, ValidateNested } from "class-validator";
 import { Schema } from "@nestjs/mongoose";
-import { UserLocation } from "./Location";
-import { Type } from "class-transformer";
 import { HydratedDocument } from "mongoose";
-import { privateAttributes, privateAttributesWithoutPassword } from "../../config/variables";
+import { privateAttributesWithoutPassword } from "../../config/variables";
 
 
 
@@ -34,12 +32,6 @@ export class User{
     @Prop({ type: () => Boolean, default: false })
     blocked: boolean
 
-    @ApiPropertyOptional({ type: UserLocation })
-    @Prop({ type: 'ObjectId', ref: UserLocation.name, sparse: true })
-    @ValidateNested()
-    @IsOptional()
-    @Type(() => UserLocation)
-    localisation?: UserLocation
 
     @ApiProperty({type: Date})
     @Prop({ type: () => Date, default: () => new Date() })
@@ -68,12 +60,12 @@ export class UserSelfDTO extends OmitType(
 
 export class UserPublicDTO extends OmitType(
     UserSelfDTO,
-    ['localisation'] as const
+    [] as const
     ) {}
 
 export class UserCreateDTO extends PickType(
     UserSelfDTO,
-    ['username','email','localisation'] as const
+    ['username','email'] as const
     ) {
 
     @IsStrongPassword()

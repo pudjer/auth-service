@@ -4,7 +4,6 @@ import {HttpException, HttpStatus, Injectable, UnauthorizedException} from '@nes
 import {ConfigService} from "@nestjs/config";
 import {UserSelfDTO} from "../models/User";
 import {Request} from "express";
-import {JwtService} from "@nestjs/jwt";
 import { UserService } from '../users.service';
 
 export const TOKEN_NAME = 'refresh_token'
